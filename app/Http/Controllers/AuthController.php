@@ -30,7 +30,7 @@ class AuthController extends Controller
             if (!$user = User::create($data))
                 return response()->json(['status' => 'error', 'message' => 'Unable to register!'], 400);
 
-            return $this->onSuccessfulLogin($user);
+            return $this->onSuccessfulLogin($user, false);
         } catch (\Throwable $th) {
             return response()->json(['status' => 'error', 'message' => 'An error occured'], 400);
         }
@@ -57,13 +57,13 @@ class AuthController extends Controller
         }
     }
 
-    public function onSuccessfulLogin($user)
+    public function onSuccessfulLogin($user, $isLogin = true)
     {
         $token = $user->createToken('Bearer')->plainTextToken;
 
         $response = [
             'status'    =>  'success',
-            'message'   =>  'Login successful!',
+            'message'   =>  $isLogin ? 'Login successful!' : "Registration successful, Welcome!",
             'data'      =>  [
                 'user'              =>  $user,
                 'token'             =>  $token,
