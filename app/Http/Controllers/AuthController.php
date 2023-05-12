@@ -8,21 +8,49 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    public function register(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'name'     =>  'required|string',
+                'email'     =>  'required|email|unique:users,email',
+                'password'  =>  'required|string'
+            ]);
+
+            $user = User::where('email', $request->email)->first();
+
+            if ($user) return response()->json(['status' => 'error', 'message' => 'User already exist!'], 400);
+
+            $data['password'] = Hash::make($request->password);
+
+            if (!$user = User::create($data))
+                return response()->json(['status' => 'error', 'message' => 'Unable to register!'], 400);
+
+            return $this->onSuccessfulLogin($user);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => 'error', 'message' => 'An error occured'], 400);
+        }
+    }
+
     public function login(Request $request)
     {
-        $request->validate([
-            'email'     =>  'required|email',
-            'password'  =>  'required|string'
-        ]);
+        try {
+            $request->validate([
+                'email'     =>  'required|email',
+                'password'  =>  'required|string'
+            ]);
 
-        $user = User::where('email', $request->email)->first();
+            $user = User::where('email', $request->email)->first();
 
-        if (!$user) return response()->json(['status' => 'error', 'message' => 'User does not exist!'], 400);
+            if (!$user) return response()->json(['status' => 'error', 'message' => 'User does not exist!'], 400);
 
-        if (!Hash::check($request->password, $user->password))
-            return response()->json(['status' => 'error', 'message' => 'Bad credentials'], 400);
+            if (!Hash::check($request->password, $user->password))
+                return response()->json(['status' => 'error', 'message' => 'Bad credentials'], 400);
 
-        return $this->onSuccessfulLogin($user);
+            return $this->onSuccessfulLogin($user);
+        } catch (\Throwable $th) {
+            return response()->json(['status' => 'error', 'message' => 'An error occured'], 400);
+        }
     }
 
     public function onSuccessfulLogin($user)
@@ -55,11 +83,11 @@ class AuthController extends Controller
 
         return response()->json($response);
     }
-    
+
     public function logOut()
     {
         $user = auth()->user();
-        if($user){
+        if ($user) {
             $user->tokens()->delete();
             // $user->currentAccessToken()->delete();
 
