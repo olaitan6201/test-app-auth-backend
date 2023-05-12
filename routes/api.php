@@ -19,10 +19,12 @@ Route::post('register', [AuthController::class, 'register']);
 
 Route::post('login', [AuthController::class, 'login']);
 
-Route::post('logout', [AuthController::class, 'logOut']);
-
 Route::get('login', function () {
     return response()->json(['status' => 'error', 'message' => 'Not found'], 404);
 })->name('login');
 
-Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'getUser']);
+Route::middleware('auth:sanctum')->group(function(){
+    Route::get('/user', [AuthController::class, 'getUser']);
+    
+    Route::post('/logout', [AuthController::class, 'logOut']);
+});
