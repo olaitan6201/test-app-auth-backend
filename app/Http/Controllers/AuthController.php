@@ -14,8 +14,12 @@ class AuthController extends Controller
             $data = $request->validate([
                 'name'     =>  'required|string',
                 'email'     =>  'required|email|unique:users,email',
-                'password'  =>  'required|string'
+                'password'  =>  ['required', 'string', 'confirmed'],
+                'password_confirmation'  =>  'required|string',
             ]);
+
+            if ($request->password !== $request->password_confirmation)
+                return response()->json(['status' => 'error', 'message' => 'Password confirmation failed!'], 400);
 
             $user = User::where('email', $request->email)->first();
 
