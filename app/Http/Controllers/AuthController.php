@@ -10,51 +10,43 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        try {
-            $data = $request->validate([
-                'name'     =>  'required|string',
-                'email'     =>  'required|email|unique:users,email',
-                'password'  =>  ['required', 'string', 'confirmed'],
-                'password_confirmation'  =>  'required|string',
-            ]);
+        $data = $request->validate([
+            'name'     =>  'required|string',
+            'email'     =>  'required|email|unique:users,email',
+            'password'  =>  ['required', 'string', 'confirmed'],
+            'password_confirmation'  =>  'required|string',
+        ]);
 
-            if ($request->password !== $request->password_confirmation)
-                return response()->json(['status' => 'error', 'message' => 'Password confirmation failed!'], 400);
+        if ($request->password !== $request->password_confirmation)
+            return response()->json(['status' => 'error', 'message' => 'Password confirmation failed!'], 400);
 
-            $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
 
-            if ($user) return response()->json(['status' => 'error', 'message' => 'User already exist!'], 400);
+        if ($user) return response()->json(['status' => 'error', 'message' => 'User already exist!'], 400);
 
-            $data['password'] = Hash::make($request->password);
+        $data['password'] = Hash::make($request->password);
 
-            if (!$user = User::create($data))
-                return response()->json(['status' => 'error', 'message' => 'Unable to register!'], 400);
+        if (!$user = User::create($data))
+            return response()->json(['status' => 'error', 'message' => 'Unable to register!'], 400);
 
-            return $this->onSuccessfulLogin($user, false);
-        } catch (\Throwable $th) {
-            return response()->json(['status' => 'error', 'message' => 'An error occured'], 400);
-        }
+        return $this->onSuccessfulLogin($user, false);
     }
 
     public function login(Request $request)
     {
-        try {
-            $request->validate([
-                'email'     =>  'required|email',
-                'password'  =>  'required|string'
-            ]);
+        $request->validate([
+            'email'     =>  'required|email',
+            'password'  =>  'required|string'
+        ]);
 
-            $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
 
-            if (!$user) return response()->json(['status' => 'error', 'message' => 'User does not exist!'], 400);
+        if (!$user) return response()->json(['status' => 'error', 'message' => 'User does not exist!'], 400);
 
-            if (!Hash::check($request->password, $user->password))
-                return response()->json(['status' => 'error', 'message' => 'Bad credentials'], 400);
+        if (!Hash::check($request->password, $user->password))
+            return response()->json(['status' => 'error', 'message' => 'Bad credentials'], 400);
 
-            return $this->onSuccessfulLogin($user);
-        } catch (\Throwable $th) {
-            return response()->json(['status' => 'error', 'message' => 'An error occured'], 400);
-        }
+        return $this->onSuccessfulLogin($user);
     }
 
     public function onSuccessfulLogin($user, $isLogin = true)
